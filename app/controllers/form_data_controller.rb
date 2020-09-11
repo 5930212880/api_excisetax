@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'rest-client'
 require 'json'
 
@@ -54,7 +55,7 @@ class FormDataController < ApplicationController
 #    end
     
     def fetch_data
-      update_date = '20200429' 
+      update_date = '20200729' 
       response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
       {
         "SystemId":"systemid", 
@@ -67,16 +68,16 @@ class FormDataController < ApplicationController
           "ProductCategory":"01"
         } 
       }.to_json, 
-      {content_type: :json}
-  
-      # render json: response , content_type: 'application/json'
-      # render json: obj
-      # render json: obj['FormInformation']
-      # render JSON.parse(response.FormData[1].RtnCtlNo)
-      # render json: response
-      obj = JSON.parse(response)
-      puts obj
-      render json: obj['FormInformation'][0]['FormCode']
+      {
+        content_type: :json
+      }
+      
+      #obj = RestClient::Resource.new(response)
+      #parse = JSON.parse(obj.body)
+      #get_data = parse['FormCode']
+      
+      res = RestClient.get 'https://api.spotify.com/v1/albums'
+      response.code
       
     end
 end
