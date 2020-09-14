@@ -57,9 +57,24 @@ payload =   {
  #   payload)
 
 
-session = RestClient::Resource.new 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501'
-response = session.post("",{:params => payload} )
-
-puts response.code
-puts response.body
-
+ update_date = '20200729' 
+      response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
+      {
+        "SystemId":"systemid", 
+        "UserName":"my_username", 
+        "Password":"bbbbb", 
+        "IpAddress":"10.11.1.10", 
+        "Operation":"1", 
+        "RequestData": {
+          "FormUpdateDate":"#{update_date}", 
+          "ProductCategory":"01"
+        } 
+      }.to_json, 
+      {
+        content_type: :json
+      }
+      
+      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |key|
+        puts key
+      end
+      

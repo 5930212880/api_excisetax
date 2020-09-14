@@ -72,12 +72,18 @@ class FormDataController < ApplicationController
         content_type: :json
       }
       
-      #obj = RestClient::Resource.new(response)
-      #parse = JSON.parse(obj.body)
-      #get_data = parse['FormCode']
+      value = JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |key|
+        puts key
+      end
+
+      render json: value
+      #obj = JSON.parse(response)
+      #render json: obj
+      #['FormData'][0]['RtnCtlNo']
       
-      res = RestClient.get 'https://api.spotify.com/v1/albums'
-      response.code
+
+    
+      
       
     end
 end
