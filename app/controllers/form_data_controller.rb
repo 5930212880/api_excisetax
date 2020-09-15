@@ -71,19 +71,20 @@ class FormDataController < ApplicationController
       {
         content_type: :json
       }
-      
-      value = JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |key|
-        puts key
+  
+      value = JSON.parse(response)['ResponseData']['FormInformation']['FormData']
+      #v = JSON.parse(response)['ResponseData']['FormInformation']['FormData'][0]['RtnCtlNo']
+      #render json: "FormEffectiveDate: #{value} RtnCtlNo: #{v}"
+
+      #render :json => JSON.parse(response)['ResponseData']['FormInformation']['FormData'].map{|value,v|
+      #  value['RtnCtlNo'] }
+
+      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |a|
+        @var = a['RtnCtlNo']
+        @a = a['FormEffectiveDate']
       end
 
-      render json: value
-      #obj = JSON.parse(response)
-      #render json: obj
-      #['FormData'][0]['RtnCtlNo']
-      
+      render json: [@var,@a]
 
-    
-      
-      
     end
 end

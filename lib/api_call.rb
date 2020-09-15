@@ -74,7 +74,11 @@ payload =   {
         content_type: :json
       }
       
-      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |key|
-        puts key
+      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |v|
+        puts RtnCtlNo: v['RtnCtlNo']
+        puts FormEffectiveDate: v['FormEffectiveDate']
+        puts FormReferenceNumber: v['FormReferenceNumber']
       end
+
+      
       
