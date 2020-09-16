@@ -7,11 +7,13 @@ class FormDataController < ApplicationController
 #  before_action :set_form_datum, only: [:show, :update, :destroy]
 
   # GET /form_data
-  #def index
-  #  @form_data = FormDatum.all
+  def index
+    #@save_data = FormDatum.save_data
+    @form_data = FormDatum.all
+
+    render json: @form_data
+  end
     
-  #  render json: @form_data
-  #end
 
   # GET /form_data/1
   #def show
@@ -19,15 +21,15 @@ class FormDataController < ApplicationController
   #end
 
   # POST /form_data
-#  def create
-#    @form_datum = FormDatum.new(form_datum_params)
+  #def create
+  #  @form_datum = FormDatum.new(fetch_data)
 
-#    if @form_datum.save
-#      render json: @form_datum, status: :created, location: @form_datum
-#    else
-#      render json: @form_datum.errors, status: :unprocessable_entity
-#    end
-#  end
+  #  if @form_datum.save
+  #    render json: @form_datum, status: :created, location: @form_datum
+  #  else
+  #    render json: @form_datum.errors, status: :unprocessable_entity
+  #  end
+  #end
 
   # PATCH/PUT /form_data/1
 #  def update
@@ -43,19 +45,18 @@ class FormDataController < ApplicationController
 #    @form_datum.destroy
 #  end
 
-#  private
     # Use callbacks to share common setup or constraints between actions.
-#    def set_form_datum
-#      @form_datum = FormDatum.find(params[:id])
-#    end
+    #def set_form_datum
+    #  @form_datum = FormDatum.find(params[:id])
+    #end
 
     # Only allow a trusted parameter "white list" through.
-#    def form_datum_params
-#      params.require(:form_datum).permit(:formreferencenumber, :formeffectivedate1, :cusname, :data)
-#    end
-    
+    #def form_datum_params
+    #  params.require(:form_datum).permit(:formreferencenumber)
+    #end
+
     def fetch_data
-      update_date = '20200729' 
+      update_date = '20200429' 
       response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
       {
         "SystemId":"systemid", 
@@ -71,20 +72,14 @@ class FormDataController < ApplicationController
       {
         content_type: :json
       }
-  
-      value = JSON.parse(response)['ResponseData']['FormInformation']['FormData']
-      #v = JSON.parse(response)['ResponseData']['FormInformation']['FormData'][0]['RtnCtlNo']
-      #render json: "FormEffectiveDate: #{value} RtnCtlNo: #{v}"
 
-      #render :json => JSON.parse(response)['ResponseData']['FormInformation']['FormData'].map{|value,v|
-      #  value['RtnCtlNo'] }
-
-      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |a|
-        @var = a['RtnCtlNo']
-        @a = a['FormEffectiveDate']
+      render json: response
+      
+      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |value|
+        @rtn = value['RtnCtlNo']
+        @refnum = value['FormReferenceNumber']
+        @effictivedate = value['FormEffectiveDate']
       end
-
-      render json: [@var,@a]
 
     end
 end

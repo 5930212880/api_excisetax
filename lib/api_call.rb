@@ -57,7 +57,7 @@ payload =   {
  #   payload)
 
 
- update_date = '20200729' 
+ update_date = '20200429' 
       response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
       {
         "SystemId":"systemid", 
@@ -74,11 +74,14 @@ payload =   {
         content_type: :json
       }
       
-      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |v|
-        puts RtnCtlNo: v['RtnCtlNo']
-        puts FormEffectiveDate: v['FormEffectiveDate']
-        puts FormReferenceNumber: v['FormReferenceNumber']
+      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].map do |v|
+        @a = v['RtnCtlNo']
+        @b = v['FormReferenceNumber']
+        @c = v['FormEffectiveDate']
+        puts [@a,@b,@c]
       end
+
+     
 
       
       
