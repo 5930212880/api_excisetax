@@ -6,23 +6,70 @@ class FormDataController < ApplicationController
 
 #  before_action :set_form_datum, only: [:show, :update, :destroy]
 
+
   # GET /form_data
   def index
-    #@save_data = FormDatum.save_data
-    @form_data = FormDatum.all
 
-    render json: @form_data
+    #get formeffectivedate from param
+    url = params[:formeffectivedate]
+
+    data = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',{
+       "SystemId":"systemid", 
+       "UserName":"my_username", 
+       "Password":"bbbbb", 
+       "IpAddress":"10.11.1.10", 
+       "Operation":"1", 
+       "RequestData": {
+         "FormUpdateDate":"#{url}", 
+         "ProductCategory":"01"
+       } 
+     }.to_json, 
+     {
+       content_type: :json
+     }
+
+  
+    if JSON.parse(data)['ResponseCode'] != "OK"
+      render json: { status: 404, error: "Not Found" }, status: :not_found
+    else
+    #parse json
+      api_data = JSON.parse(data)['ResponseData']['FormInformation']['FormData']
+
+    #map data to db
+      api_data.each do |value|
+          if FormDatum.exists?(['formreferencenumber LIKE ?',"%#{value['FormReferenceNumber']}%"])
+              FormDatum.update(
+                  cusname: value['CusName'],
+                  formeffectivedate: value['FormEffectiveDate'],
+                  formreferencenumber: value['FormReferenceNumber'],
+                  data: value
+              )
+          else 
+              FormDatum.create!(
+                  cusname: value['CusName'],
+                  formeffectivedate: value['FormEffectiveDate'],
+                  formreferencenumber: value['FormReferenceNumber'],
+                  data: value
+              )
+          end    
+      end
+      render json: FormDatum.all
+    end
   end
-    
-
+  
   # GET /form_data/1
-  #def show
-  #  render json: @form_datum
-  #end
+  def show
+    form_data = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
+    if form_data.present?
+      render json: form_data
+    else
+      render json: { status: 404, error: "Not Found" }, status: :not_found
+    end
+  end
 
   # POST /form_data
   #def create
-  #  @form_datum = FormDatum.new(fetch_data)
+  #  @form_datum = FormDatum.new(form_datum_params)
 
   #  if @form_datum.save
   #    render json: @form_datum, status: :created, location: @form_datum
@@ -52,34 +99,8 @@ class FormDataController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     #def form_datum_params
-    #  params.require(:form_datum).permit(:formreferencenumber)
+    #  params.require(:form_datum).permit(:)
     #end
 
-    def fetch_data
-      update_date = '20200429' 
-      response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
-      {
-        "SystemId":"systemid", 
-        "UserName":"my_username", 
-        "Password":"bbbbb", 
-        "IpAddress":"10.11.1.10", 
-        "Operation":"1", 
-        "RequestData": {
-          "FormUpdateDate":"#{update_date}", 
-          "ProductCategory":"01"
-        } 
-      }.to_json, 
-      {
-        content_type: :json
-      }
-
-      render json: response
-      
-      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].each do |value|
-        @rtn = value['RtnCtlNo']
-        @refnum = value['FormReferenceNumber']
-        @effictivedate = value['FormEffectiveDate']
-      end
-
-    end
+   
 end

@@ -17,25 +17,12 @@
 class FormDatum < ApplicationRecord
     require 'rest-client'
 
-    validates :formreferencenumber, length: { is: 14 }, :uniqueness => true
-    
-    #    api_parse = JSON.parse(response)
-    #    data = api_parse['ResponseData']['FormInformation']['FormData'].map do |value|
-    #        api_new = FormDatum.new
-    #        api_new.formreferencenumber = value['FormReferenceNumber']
-    #        api_new.formeffectivedate = value['FormEffectiveDate']
-    #        api_new.cusname = value['CusName']
-    #        api_new.data = value
-    #        api_new.save
-    #        api_new
-    #    end
-    #    data.select(&:persisted?)
-    #end
+    validates :formreferencenumber, :uniqueness => true
 
-    
-      update_date = '20200414' 
-      response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
-      {
+    def self.get_api
+      #get data api  
+      update_date = '20200302' 
+      response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',{
         "SystemId":"systemid", 
         "UserName":"my_username", 
         "Password":"bbbbb", 
@@ -49,25 +36,15 @@ class FormDatum < ApplicationRecord
       {
         content_type: :json
       }
+    end
 
-      api_data = JSON.parse(response)['ResponseData']['FormInformation']['FormData']
-      
-        api_data.each do |value|
-            if FormDatum.exists?(['formreferencenumber LIKE ?',"%#{value['FormReferenceNumber']}%"])
-                FormDatum.update(
-                    cusname: value['CusName'].to_s,
-                    formeffectivedate: value['FormEffectiveDate'],
-                    formreferencenumber: value['FormReferenceNumber'],
-                    data: value
-                )
-            else    
-                FormDatum.create!(
-                    cusname: value['CusName'].to_s,
-                    formeffectivedate: value['FormEffectiveDate'],
-                    formreferencenumber: value['FormReferenceNumber'].to_s,
-                    data: value
-                )
-            end    
-        end
+    # def show_data
+    #   json = {}
+    #   json[:formreferencenumber] = self.formreferencenumber
+    #   json[:formeffectivedate] = self.formeffectivedate
+    #   json[:cusname] = self.cusname
+    #   json[:data] = self.data
+    #   json
+    # end 
 
 end
