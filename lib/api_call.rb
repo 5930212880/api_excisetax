@@ -2,62 +2,8 @@
 require 'rest-client'
 require 'json'
 
-#class ApiCall
- #  def get_api
-#        response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',{
-#            headers: {
-#                'Content-Type': 'application/json'
-#            },
-#            body: { 
-#                SystemId:'systemid', 
-#                UserName:'my_username', 
-#                Password:'bbbbb', 
-#                IpAddress:'10.11.1.10', 
-#                Operation:'1', 
-#                RequestData: {
-#                    FormUpdateDate:'20200429', 
-#                    ProductCategory:'01'
-#            }
-#        }
-#    }
-        
-#    end
-#end
 
-#api = ApiCall.new 
-#api.each do |data|
-#    puts "RequestData: #{data.FormCode}"
-#end
-
-payload =   {
-    "SystemId":"systemid", 
-    "UserName":"my_username", 
-    "Password":"bbbbb", 
-    "IpAddress":"10.11.1.10", 
-    "Operation":"1", 
-    "RequestData": {
-        "FormReferenceNumber":"", 
-        "FormEffectiveDateFrom":"", 
-        "FormEffectiveDateTo":"", 
-        "HomeOfficeId":"",
-        "RegId":"",
-        "TaxType":"", 
-        "TransFrom":"", 
-        "FormStatus":"", 
-        "FormUpdateDate":"20200429", 
-        "ProductCategory":"01"
-} 
-}
-
-#resource = RestClient::Request.execute(
-#    method: :post, url: 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
-#    UserName: 'my_username', Password: 'bbbbb') 
-
-#response = RestClient.post('http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
- #   payload)
-
-
- update_date = '20200429' 
+      update_date = '20200729' 
       response = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',
       {
         "SystemId":"systemid", 
@@ -74,12 +20,41 @@ payload =   {
         content_type: :json
       }
       
-      JSON.parse(response)['ResponseData']['FormInformation']['FormData'].map do |v|
-        @a = v['RtnCtlNo']
-        @b = v['FormReferenceNumber']
-        @c = v['FormEffectiveDate']
-        puts [@a,@b,@c]
+      # # @data = JSON.parse(response)['ResponseData']['FormInformation']['FormData']
+
+      # # JSON.parse(response)['ResponseData']['FormInformation']['FormData'].map do |v|
+      # #   puts FormReferenceNumber: v['FormReferenceNumber'], TransportName: v['TransportName1'], FormEffectiveDate: v['FormEffectiveDate'], OffCode: "010400", Transfrom: "1", Remark: ""
+      # #   v['GoodsListPart2']['GoodsEntry'].map do |b|
+      # #       puts ProductCode: b['ProductCode'], CategoryCode1: "Alh", GoodsInformation: { UnitCode: b['UnitCode'], Amount: b['GoodsNum']}
+      # #       puts UnitCode: b['UnitCode'], Amount: b['GoodsNum'], SeqNo: b['SeqNo']
+      # #   end
+      # end
+
+
+       # data = JSON.parse(formeffectivedate)['ResponseData']['FormInformation']['FormData'].map do |v|
+    #   v['GoodsListPart1']['GoodsEntry'].map do |b|
+    #       ProductCode: b['ProductCode'], CategoryCode1: "Alh"
+    #       UnitCode: b['UnitCode'], Amount: b['GoodsNum'], SeqNo: b['SeqNo'], TransportName: b['TransportName']
+    #   end
+    # end
+
+    a = [1,2,3]
+
+    if a.any?
+      a.map do |v|
+        puts v
       end
+    else
+      puts 'error'
+    end
+
+
+
+
+    
+
+
+      
 
      
 

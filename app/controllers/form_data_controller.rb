@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'rest-client'
 require 'json'
 
@@ -6,29 +5,31 @@ class FormDataController < ApplicationController
 
 #  before_action :set_form_datum, only: [:show, :update, :destroy]
 
+  def all
+    render json: FormDatum.all
+  end
 
-  # GET /form_data
+  # GET /form_data/formeffectivedate
   def index
-
     #get formeffectivedate from param
     url = params[:formeffectivedate]
 
     data = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',{
-       "SystemId":"systemid", 
-       "UserName":"my_username", 
-       "Password":"bbbbb", 
-       "IpAddress":"10.11.1.10", 
-       "Operation":"1", 
-       "RequestData": {
-         "FormUpdateDate":"#{url}", 
-         "ProductCategory":"01"
+       SystemId:"systemid", 
+       UserName:"my_username", 
+       Password:"bbbbb", 
+       IpAddress:"10.11.1.10", 
+       Operation:"1", 
+       RequestData: {
+        FormStatus: "A", 
+         FormUpdateDate:"#{url}", 
+         ProductCategory:"01"
        } 
      }.to_json, 
      {
        content_type: :json
      }
-
-  
+     
     if JSON.parse(data)['ResponseCode'] != "OK"
       render json: { status: 404, error: "Not Found" }, status: :not_found
     else
@@ -42,6 +43,7 @@ class FormDataController < ApplicationController
                   cusname: value['CusName'],
                   formeffectivedate: value['FormEffectiveDate'],
                   formreferencenumber: value['FormReferenceNumber'],
+                  signflag: value['SignFlag'],
                   data: value
               )
           else 
@@ -49,6 +51,7 @@ class FormDataController < ApplicationController
                   cusname: value['CusName'],
                   formeffectivedate: value['FormEffectiveDate'],
                   formreferencenumber: value['FormReferenceNumber'],
+                  signflag: value['SignFlag'],
                   data: value
               )
           end    
@@ -57,7 +60,7 @@ class FormDataController < ApplicationController
     end
   end
   
-  # GET /form_data/1
+  # GET /form_data/formreferencenumber
   def show
     form_data = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
     if form_data.present?
@@ -65,6 +68,54 @@ class FormDataController < ApplicationController
     else
       render json: { status: 404, error: "Not Found" }, status: :not_found
     end
+  end
+
+  # POST /form_data/saveproduct/formreferencenumber
+  def save_from_product_source
+    # @formeffectivedate = FormDatum.new(form_datum_params)
+    seacrh = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
+
+    @test = seacrh.data['GoodsListCheck']['GoodsEntry'].map do |v| 
+      { UnitCode: v['UnitCode'], 
+        Amount: v['SouAmount'], 
+        SeqNo: v['SeqNo'], 
+        TransportName: v['SouTransportName'], 
+        SealNo: v['SouSealNo'], 
+        SealAmount: v['SouSealAmount'], 
+        Marker: v['SouMarker'], 
+        GoodsInformation: { 
+          ProductCode: v['ProductCode'], 
+          CategoryCode1: v['BrandMainCode'], 
+          CategoryCode2: v['BrandSecondCode'], 
+          CategoryCode3: v['ModelCode'], 
+          CategoryCode4: v['SizeCode'], 
+          CategoryCode5: v['DegreeCode']
+        } 
+      }
+    end 
+
+    @data = { 
+      SystemId: "systemid",
+      UserName: "my_username",
+      Password: "bbbbb",
+      IpAddress: "10.11.1.10",
+      Operation: "1",
+      RequestData: { FormCode: "PS28",
+      FormReferenceNumber: seacrh.formreferencenumber,
+      FormEffectiveDate: seacrh.formeffectivedate.strftime('%Y%m%d'),
+      OffCode: "010400",
+      TransFrom: "1",
+      Remark: "",
+      GoodsList: {
+        GoodsEntry: @test
+      }
+      } 
+    }.to_json
+
+    saveproduct = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/SaveFormProductSource', 
+      @data, { content_type: :json }
+    
+    render json: saveproduct
   end
 
   # POST /form_data
@@ -92,15 +143,16 @@ class FormDataController < ApplicationController
 #    @form_datum.destroy
 #  end
 
-    # Use callbacks to share common setup or constraints between actions.
-    #def set_form_datum
-    #  @form_datum = FormDatum.find(params[:id])
-    #end
+# private
+#     # Use callbacks to share common setup or constraints between actions.
+#     #def set_form_datum
+#     #  @form_datum = FormDatum.find(params[:id])
+#     #end
 
-    # Only allow a trusted parameter "white list" through.
-    #def form_datum_params
-    #  params.require(:form_datum).permit(:)
-    #end
+#     # Only allow a trusted parameter "white list" through.
+#     def form_datum_params
+#      params.require(:form_datum).permit(:formeffectivedate)
+#     end
 
    
 end
