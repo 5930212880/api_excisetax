@@ -104,7 +104,7 @@ class FormDataController < ApplicationController
         RequestData: { FormCode: "PS28",
         FormReferenceNumber: seacrh.formreferencenumber,
         FormEffectiveDate: seacrh.formeffectivedate.strftime('%Y%m%d'),
-        OffCode: "010400",
+        OffCode: seacrh.data['HomeOfficeName'],
         TransFrom: "1",
         Remark: "",
         GoodsList: {
@@ -119,7 +119,7 @@ class FormDataController < ApplicationController
       render json: saveproduct
 
     else
-      render json: { ResponseMessage: "signflag = #{seacrh.signflag}" }
+      render json: { ResponseMessage: "ไม่สามารถบันทึกได้ signflag = #{seacrh.signflag}" }
     end
 
   end
