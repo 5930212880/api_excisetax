@@ -75,47 +75,53 @@ class FormDataController < ApplicationController
     # @formeffectivedate = FormDatum.new(form_datum_params)
     seacrh = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
 
-    @test = seacrh.data['GoodsListCheck']['GoodsEntry'].map do |v| 
-      { UnitCode: v['UnitCode'], 
-        Amount: v['SouAmount'], 
-        SeqNo: v['SeqNo'], 
-        TransportName: v['SouTransportName'], 
-        SealNo: v['SouSealNo'], 
-        SealAmount: v['SouSealAmount'], 
-        Marker: v['SouMarker'], 
-        GoodsInformation: { 
-          ProductCode: v['ProductCode'], 
-          CategoryCode1: v['BrandMainCode'], 
-          CategoryCode2: v['BrandSecondCode'], 
-          CategoryCode3: v['ModelCode'], 
-          CategoryCode4: v['SizeCode'], 
-          CategoryCode5: v['DegreeCode']
+    if seacrh.signflag == '2'
+      @listcheck = seacrh.data['GoodsListCheck']['GoodsEntry'].map do |v| 
+        { UnitCode: v['UnitCode'], 
+          Amount: v['SouAmount'], 
+          SeqNo: v['SeqNo'], 
+          TransportName: v['SouTransportName'], 
+          SealNo: v['SouSealNo'], 
+          SealAmount: v['SouSealAmount'], 
+          Marker: v['SouMarker'], 
+          GoodsInformation: { 
+            ProductCode: v['ProductCode'], 
+            CategoryCode1: v['BrandMainCode'], 
+            CategoryCode2: v['BrandSecondCode'], 
+            CategoryCode3: v['ModelCode'], 
+            CategoryCode4: v['SizeCode'], 
+            CategoryCode5: v['DegreeCode']
+          } 
+        }
+      end 
+
+      @requestdata = { 
+        SystemId: "systemid",
+        UserName: "my_username",
+        Password: "bbbbb",
+        IpAddress: "10.11.1.10",
+        Operation: "1",
+        RequestData: { FormCode: "PS28",
+        FormReferenceNumber: seacrh.formreferencenumber,
+        FormEffectiveDate: seacrh.formeffectivedate.strftime('%Y%m%d'),
+        OffCode: "010400",
+        TransFrom: "1",
+        Remark: "",
+        GoodsList: {
+          GoodsEntry: @listcheck
+        }
         } 
-      }
-    end 
+      }.to_json
 
-    @data = { 
-      SystemId: "systemid",
-      UserName: "my_username",
-      Password: "bbbbb",
-      IpAddress: "10.11.1.10",
-      Operation: "1",
-      RequestData: { FormCode: "PS28",
-      FormReferenceNumber: seacrh.formreferencenumber,
-      FormEffectiveDate: seacrh.formeffectivedate.strftime('%Y%m%d'),
-      OffCode: "010400",
-      TransFrom: "1",
-      Remark: "",
-      GoodsList: {
-        GoodsEntry: @test
-      }
-      } 
-    }.to_json
+      saveproduct = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/SaveFormProductSource', 
+        @requestdata, { content_type: :json }
+      
+      render json: saveproduct
 
-    saveproduct = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/SaveFormProductSource', 
-      @data, { content_type: :json }
-    
-    render json: saveproduct
+    else
+      render json: { ResponseMessage: "signflag = #{seacrh.signflag}" }
+    end
+
   end
 
   # POST /form_data
