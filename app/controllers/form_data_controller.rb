@@ -9,11 +9,10 @@ class FormDataController < ApplicationController
     render json: FormDatum.all
   end
 
-  # GET /form_data/formeffectivedate
-  def index
-    #get formeffectivedate from param
+  #---- GET /form_data/formeffectivedate ----#
+  def inquiry
     url = params[:formeffectivedate]
-
+    
     data = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',{
        SystemId:"systemid", 
        UserName:"my_username", 
@@ -21,15 +20,19 @@ class FormDataController < ApplicationController
        IpAddress:"10.11.1.10", 
        Operation:"1", 
        RequestData: {
+        FormReferenceNumber: "", 
+        FormEffectiveDateFrom: "", 
+        FormEffectiveDateTo: "", 
+        HomeOfficeId: "",
         FormStatus: "A", 
-         FormUpdateDate:"#{url}", 
-         ProductCategory:"01"
+        FormUpdateDate:"#{url}", 
+        ProductCategory:"01"
        } 
      }.to_json, 
      {
        content_type: :json
      }
-     
+    
     if JSON.parse(data)['ResponseCode'] != "OK"
       render json: { status: 404, error: "Not Found" }, status: :not_found
     else
@@ -38,6 +41,7 @@ class FormDataController < ApplicationController
 
     #map data to db
       api_data.each do |value|
+        if value['SignFlag'] == '2'
           if FormDatum.exists?(['formreferencenumber LIKE ?',"%#{value['FormReferenceNumber']}%"])
               FormDatum.update(
                   cusname: value['CusName'],
@@ -55,12 +59,15 @@ class FormDataController < ApplicationController
                   data: value
               )
           end    
+        else
+          # render json: { ResponseMessage: "Error , SignFlag = #{value['SignFlag']}" }
+        end
       end
       render json: FormDatum.all
     end
   end
   
-  # GET /form_data/formreferencenumber
+  #---- GET /form_data/formreferencenumber ----#
   def show
     form_data = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
     if form_data.present?
@@ -70,9 +77,8 @@ class FormDataController < ApplicationController
     end
   end
 
-  # POST /form_data/saveproduct/formreferencenumber
-  def save_from_product_source
-    # @formeffectivedate = FormDatum.new(form_datum_params)
+  #---- POST /form_data/saveproduct/[:formreferencenumber] ----#
+  def save_form_product_source
     seacrh = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
 
     if seacrh.signflag == '2'
@@ -104,7 +110,7 @@ class FormDataController < ApplicationController
         RequestData: { FormCode: "PS28",
         FormReferenceNumber: seacrh.formreferencenumber,
         FormEffectiveDate: seacrh.formeffectivedate.strftime('%Y%m%d'),
-        OffCode: seacrh.data['HomeOfficeName'],
+        OffCode: seacrh.data['HomeOfficeId'],
         TransFrom: "1",
         Remark: "",
         GoodsList: {
@@ -121,8 +127,31 @@ class FormDataController < ApplicationController
     else
       render json: { ResponseMessage: "ไม่สามารถบันทึกได้ signflag = #{seacrh.signflag}" }
     end
-
   end
+
+  #---- POST /form_data/ ----#
+    def inquiry_form_product_checklist
+      checklist = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
+
+      @productchecklist = {
+        SystemId: "systemid",
+        UserName: "my_username",
+        Password: "bbbbb",
+        IpAddress: "10.11.1.10",
+        Operation: "1",
+        RequestData: { FormCode: "PS28",
+        FormReferenceNumber: checklist.formreferencenumber,
+        FormEffectiveDate: checklist.formeffectivedate.strftime('%Y%m%d'),
+        OffCode: checklist.data['HomeOfficeId'],
+        ActionType: "2"
+        }
+      }.to_json
+
+      inquiryformchecklist = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryFormProductCheckList',
+        @productchecklist, { content_type: :json }
+
+      render json: inquiryformchecklist
+    end
 
   # POST /form_data
   #def create

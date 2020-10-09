@@ -40,13 +40,11 @@ require 'json'
 
     a = [1,2,3]
 
-    if a.any?
+    
       a.map do |v|
-        puts v
+        
       end
-    else
-      puts 'error'
-    end
+  
 
 
 
