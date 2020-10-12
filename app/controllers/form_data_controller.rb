@@ -3,7 +3,10 @@ require 'json'
 
 class FormDataController < ApplicationController
 
-#  before_action :set_form_datum, only: [:show, :update, :destroy]
+ before_action :find_by_formreferencenumber, only: [:save_form_product_source, :inquiry_form_product_checklist_sou, :inquiry_form_product_checklist_des]
+
+  def updatedate
+  end
 
   def all
     render json: FormDatum.all
@@ -78,11 +81,11 @@ class FormDataController < ApplicationController
   end
 
   #---- POST /form_data/saveproduct/[:formreferencenumber] ----#
-  def save_form_product_source
-    seacrh = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
+  def save_form_product_source #ส่งหมายเลขทะเบียนรถ/seal/maker
+    # seacrh = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
 
-    if seacrh.signflag == '2'
-      @listcheck = seacrh.data['GoodsListCheck']['GoodsEntry'].map do |v| 
+    if @formref.signflag == '2'
+      @listcheck = @formref.data['GoodsListCheck']['GoodsEntry'].map do |v| 
         { UnitCode: v['UnitCode'], 
           Amount: v['SouAmount'], 
           SeqNo: v['SeqNo'], 
@@ -108,9 +111,9 @@ class FormDataController < ApplicationController
         IpAddress: "10.11.1.10",
         Operation: "1",
         RequestData: { FormCode: "PS28",
-        FormReferenceNumber: seacrh.formreferencenumber,
-        FormEffectiveDate: seacrh.formeffectivedate.strftime('%Y%m%d'),
-        OffCode: seacrh.data['HomeOfficeId'],
+        FormReferenceNumber: @formref.formreferencenumber,
+        FormEffectiveDate: @formref.formeffectivedate.strftime('%Y%m%d'),
+        OffCode: @formref.data['HomeOfficeId'],
         TransFrom: "1",
         Remark: "",
         GoodsList: {
@@ -125,33 +128,59 @@ class FormDataController < ApplicationController
       render json: saveproduct
 
     else
-      render json: { ResponseMessage: "ไม่สามารถบันทึกได้ signflag = #{seacrh.signflag}" }
+      render json: { ResponseMessage: 'ไม่สามารถบันทึกข้อมูลได้' } 
     end
   end
 
-  #---- POST /form_data/ ----#
-    def inquiry_form_product_checklist
-      checklist = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
+  #---- POST /form_data/inquirychecklist/[:formreferencenumber] ----#
+  def inquiry_form_product_checklist_sou #ดึงรายชื่อผู้เซ็น ต้นทาง signflag = 2  
+    # formref = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
 
-      @productchecklist = {
+    @productchecklistsou = {
+      SystemId: "systemid",
+      UserName: "my_username",
+      Password: "bbbbb",
+      IpAddress: "10.11.1.10",
+      Operation: "1",
+      RequestData: { FormCode: "PS28",
+      FormReferenceNumber: @formref.formreferencenumber,
+      FormEffectiveDate: @formref.formeffectivedate.strftime('%Y%m%d'),
+      OffCode: @formref.data['HomeOfficeId'],
+      ActionType: "1"
+      }
+    }.to_json
+
+    inquiryformchecklistsou = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryFormProductCheckList',
+      @productchecklistsou, { content_type: :json }
+
+    render json: inquiryformchecklistsou
+  end
+
+  #---- POST /form_data/inquirychecklist/[:formreferencenumber] ----#
+    def inquiry_form_product_checklist_des #ดึงรายชื่อผู้เซ็น ปลายทาง signflag = 2  
+      # checklist = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
+
+      @productchecklistdes = {
         SystemId: "systemid",
         UserName: "my_username",
         Password: "bbbbb",
         IpAddress: "10.11.1.10",
         Operation: "1",
         RequestData: { FormCode: "PS28",
-        FormReferenceNumber: checklist.formreferencenumber,
-        FormEffectiveDate: checklist.formeffectivedate.strftime('%Y%m%d'),
-        OffCode: checklist.data['HomeOfficeId'],
+        FormReferenceNumber: @formref.formreferencenumber,
+        FormEffectiveDate: @formref.formeffectivedate.strftime('%Y%m%d'),
+        OffCode: @formref.data['HomeOfficeId'],
         ActionType: "2"
         }
       }.to_json
 
-      inquiryformchecklist = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryFormProductCheckList',
-        @productchecklist, { content_type: :json }
+      inquiryformchecklistdes = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryFormProductCheckList',
+        @productchecklistdes, { content_type: :json }
 
-      render json: inquiryformchecklist
+      render json: inquiryformchecklistdes
     end
+
+    
 
   # POST /form_data
   #def create
@@ -178,11 +207,11 @@ class FormDataController < ApplicationController
 #    @form_datum.destroy
 #  end
 
-# private
+private
 #     # Use callbacks to share common setup or constraints between actions.
-#     #def set_form_datum
-#     #  @form_datum = FormDatum.find(params[:id])
-#     #end
+    def find_by_formreferencenumber
+      @formref = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
+    end
 
 #     # Only allow a trusted parameter "white list" through.
 #     def form_datum_params
